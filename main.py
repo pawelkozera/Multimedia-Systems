@@ -1,37 +1,37 @@
 import cv2
 from mediapipe import solutions
-from mediapipe.framework.formats import landmark_pb2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def main():
-    # Utwórz obiekt do wykrywania twarzy
-    face_mesh = solutions.face_mesh.FaceMesh()
+BAR_HEIGHT = 70
+filter_enabled = False
 
-    # Uruchom kamerę
-    cap = cv2.VideoCapture(0)  # Numer kamery, 0 oznacza domyślną kamerę
+def main():
+    global filter_enabled
+
+    face_mesh = solutions.face_mesh.FaceMesh()
+    cap = cv2.VideoCapture(0)
 
     while cap.isOpened():
-        # Wczytaj ramkę z kamery
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        elif cv2.waitKey(1) & 0xFF == ord('w'):
+            filter_enabled = True
+        elif cv2.waitKey(1) & 0xFF == ord('z'):
+            filter_enabled = False
+            
         ret, frame = cap.read()
         if not ret:
             break
 
-        # Przetwórz ramkę - wykrywanie punktów charakterystycznych twarzy
+        if filter_enabled:
+            frame = add_black_bars(frame)
+
         results = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
         if results.multi_face_landmarks:
-            # Wywołaj funkcję do rysowania punktów charakterystycznych twarzy
-            #annotated_frame = draw_landmarks_on_image(frame, results)
-
-            # Wyświetl zaktualizowaną ramkę
             cv2.imshow('Face Mesh', frame)
 
-        # Wyjście z pętli po naciśnięciu klawisza 'q'
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # Zwolnij obiekt kamery i zakończ okno
     cap.release()
     cv2.destroyAllWindows()
 
@@ -39,27 +39,19 @@ def main():
 def draw_landmarks_on_image(rgb_image, detection_result):
     annotated_image = np.copy(rgb_image)
 
-    # Sprawdź, czy wykryto jakieś twarze
     if detection_result.multi_face_landmarks:
-        # Pętla po wykrytych twarzach
         for face_landmarks in detection_result.multi_face_landmarks:
-            # Rysowanie punktów charakterystycznych twarzy
             for landmark in face_landmarks.landmark:
-                # Pobierz współrzędne punktu charakterystycznego
                 x = landmark.x * annotated_image.shape[1]
                 y = landmark.y * annotated_image.shape[0]
-
-                # Narysuj punkt na obrazie
                 cv2.circle(annotated_image, (int(x), int(y)), 2, (0, 255, 0), -1)
 
     return annotated_image
 
 
 def plot_face_blendshapes_bar_graph(face_blendshapes):
-    # Extract the face blendshapes category names and scores.
     face_blendshapes_names = [face_blendshapes_category.category_name for face_blendshapes_category in face_blendshapes]
     face_blendshapes_scores = [face_blendshapes_category.score for face_blendshapes_category in face_blendshapes]
-    # The blendshapes are ordered in decreasing score value.
     face_blendshapes_ranks = range(len(face_blendshapes_names))
 
     fig, ax = plt.subplots(figsize=(12, 12))
@@ -67,7 +59,6 @@ def plot_face_blendshapes_bar_graph(face_blendshapes):
     ax.set_yticks(face_blendshapes_ranks, face_blendshapes_names)
     ax.invert_yaxis()
 
-    # Label each bar with values
     for score, patch in zip(face_blendshapes_scores, bar.patches):
         plt.text(patch.get_x() + patch.get_width(), patch.get_y(), f"{score:.4f}", va="top")
 
@@ -76,6 +67,15 @@ def plot_face_blendshapes_bar_graph(face_blendshapes):
     plt.tight_layout()
     plt.show()
 
+
+def add_black_bars(frame):
+    height, width, _ = frame.shape
+    black_bar = np.zeros((BAR_HEIGHT, width, 3), dtype=np.uint8)
+
+    frame[:BAR_HEIGHT, :, :] = black_bar 
+    frame[-BAR_HEIGHT:, :, :] = black_bar
+
+    return frame
 
 if __name__ == "__main__":
     main()
