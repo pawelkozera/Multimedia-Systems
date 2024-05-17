@@ -2,8 +2,9 @@ import cv2
 from mediapipe import solutions
 from apply_fiiltr import ApplyFiltr
 
+
 def main():
-    apply_mask_instance = ApplyFiltr("maska.png")
+    apply_mask_instance = ApplyFiltr("masks/anbu_mask.png")
     face_mesh = solutions.face_mesh.FaceMesh()
     cap = cv2.VideoCapture(0)
 
