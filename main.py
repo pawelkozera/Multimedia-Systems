@@ -14,6 +14,8 @@ def main():
             apply_mask_instance.filter_enabled = "BLACK_BARS"
         elif cv2.waitKey(1) & 0xFF == ord('e'):
             apply_mask_instance.filter_enabled = "APPLY_MASK"
+        elif cv2.waitKey(1) & 0xFF == ord('r'):
+            apply_mask_instance.filter_enabled = "SNOW"
         elif cv2.waitKey(1) & 0xFF == ord('z'):
             apply_mask_instance.filter_enabled = ""
 

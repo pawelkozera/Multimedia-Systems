@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import math
+import random
+
 
 class ApplyFiltr:
     OFFSET_UP = 50
@@ -14,6 +16,8 @@ class ApplyFiltr:
             return self.add_black_bars(frame)
         elif self.filter_enabled == "APPLY_MASK" and detection_result.multi_face_landmarks:
             return self.apply_mask(frame, detection_result)
+        elif self.filter_enabled == "SNOW":
+            return self.apply_snow_effect(frame)
         return frame
 
     def apply_mask(self, frame, detection_result):
@@ -81,3 +85,17 @@ class ApplyFiltr:
         frame[-BAR_HEIGHT:, :, :] = black_bar
 
         return frame
+
+    def apply_snow_effect(self, frame):
+        snow_frame = np.copy(frame)
+        snow_intensity = 0.02
+        snowflake_size = 4
+
+        num_snowflakes = int(snow_intensity * frame.shape[0] * frame.shape[1])
+        for _ in range(num_snowflakes):
+            x = random.randint(0, frame.shape[1] - 1)
+            y = random.randint(0, frame.shape[0] - 1)
+            color = (0, 255, 0) if random.random() < 0.5 else (100, 0, 255)
+            cv2.circle(snow_frame, (x, y), snowflake_size, color, -1)
+
+        return cv2.addWeighted(frame, 0.9, snow_frame, 0.1, 0)
