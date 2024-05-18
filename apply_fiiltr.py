@@ -18,6 +18,17 @@ class ApplyFiltr:
             return self.apply_mask(frame, detection_result)
         elif self.filter_enabled == "SNOW":
             return self.apply_snow_effect(frame)
+        elif self.filter_enabled == "SEPIA":
+            return self.apply_sepia(frame)
+        elif self.filter_enabled == "CARTOON":
+            return self.apply_cartoon(frame)
+        elif self.filter_enabled == "BLUR":
+            return self.apply_blur(frame)
+        elif self.filter_enabled == "EDGE_DETECTION":
+            return self.apply_edge_detection(frame)
+        elif self.filter_enabled == "INVERT":
+            return self.apply_invert(frame)
+        
         return frame
 
     def apply_mask(self, frame, detection_result):
@@ -99,3 +110,35 @@ class ApplyFiltr:
             cv2.circle(snow_frame, (x, y), snowflake_size, color, -1)
 
         return cv2.addWeighted(frame, 0.9, snow_frame, 0.1, 0)
+
+    def apply_sepia(self, frame):
+        sepia_filter = np.array([[0.272, 0.534, 0.131],
+                                [0.349, 0.686, 0.168],
+                                [0.393, 0.769, 0.189]])
+        sepia_frame = cv2.transform(frame, sepia_filter)
+        sepia_frame = np.clip(sepia_frame, 0, 255).astype(np.uint8)
+
+        return sepia_frame
+
+    def apply_cartoon(self, frame):
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_blurred = cv2.medianBlur(gray, 7)
+        edges = cv2.Canny(gray_blurred, 50, 150)
+        adaptive_edges = cv2.adaptiveThreshold(gray_blurred, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 9, 2)
+        combined_edges = cv2.bitwise_or(edges, adaptive_edges)
+        color = cv2.bilateralFilter(frame, 9, 300, 300)
+        cartoon = cv2.bitwise_and(color, color, mask=combined_edges)
+        
+        return cartoon
+
+    def apply_blur(self, frame):
+        return cv2.GaussianBlur(frame, (15, 15), 0)
+
+    def apply_edge_detection(self, frame):
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray, 100, 200)
+
+        return cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+
+    def apply_invert(self, frame):
+        return cv2.bitwise_not(frame)
