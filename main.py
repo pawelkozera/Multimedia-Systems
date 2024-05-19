@@ -4,28 +4,31 @@ from apply_fiiltr import ApplyFiltr
 
 
 def main():
-    apply_mask_instance = ApplyFiltr("masks/anbu_mask.png")
+    apply_mask_instance = ApplyFiltr()
     face_mesh = solutions.face_mesh.FaceMesh()
     cap = cv2.VideoCapture(0)
 
     while cap.isOpened():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+        elif cv2.waitKey(1) & 0xFF == ord('a'):
+            apply_mask_instance.mask_enabled = "APPLY_MASK"
+            apply_mask_instance.change_mask_index()
+        elif cv2.waitKey(1) & 0xFF == ord('s'):
+            apply_mask_instance.mask_enabled = ""
         elif cv2.waitKey(1) & 0xFF == ord('w'):
             apply_mask_instance.filter_enabled = "BLACK_BARS"
         elif cv2.waitKey(1) & 0xFF == ord('e'):
-            apply_mask_instance.filter_enabled = "APPLY_MASK"
-        elif cv2.waitKey(1) & 0xFF == ord('r'):
             apply_mask_instance.filter_enabled = "SNOW"
-        elif cv2.waitKey(1) & 0xFF == ord('t'):
+        elif cv2.waitKey(1) & 0xFF == ord('r'):
             apply_mask_instance.filter_enabled = "SEPIA"
-        elif cv2.waitKey(1) & 0xFF == ord('y'):
+        elif cv2.waitKey(1) & 0xFF == ord('t'):
             apply_mask_instance.filter_enabled = "CARTOON"
-        elif cv2.waitKey(1) & 0xFF == ord('u'):
+        elif cv2.waitKey(1) & 0xFF == ord('y'):
             apply_mask_instance.filter_enabled = "BLUR"
-        elif cv2.waitKey(1) & 0xFF == ord('i'):
+        elif cv2.waitKey(1) & 0xFF == ord('u'):
             apply_mask_instance.filter_enabled = "EDGE_DETECTION"
-        elif cv2.waitKey(1) & 0xFF == ord('o'):
+        elif cv2.waitKey(1) & 0xFF == ord('i'):
             apply_mask_instance.filter_enabled = "INVERT"
         elif cv2.waitKey(1) & 0xFF == ord('z'):
             apply_mask_instance.filter_enabled = ""

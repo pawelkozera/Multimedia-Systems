@@ -7,15 +7,19 @@ import random
 class ApplyFiltr:
     OFFSET_UP = 50
 
-    def __init__(self, mask_path):
-        self.mask = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED)
+    def __init__(self):
+        self.masks = [cv2.imread("masks/kakashi_mask.png", cv2.IMREAD_UNCHANGED), cv2.imread("masks/anbu_mask.png", cv2.IMREAD_UNCHANGED)]
+        self.mask_index = 1
+        self.mask = self.masks[0]
         self.filter_enabled = ""
+        self.mask_enabled = ""
 
     def process_frame(self, frame, detection_result):
+        if self.mask_enabled and detection_result.multi_face_landmarks:
+            frame = self.apply_mask(frame, detection_result)
+
         if self.filter_enabled == "BLACK_BARS":
             return self.add_black_bars(frame)
-        elif self.filter_enabled == "APPLY_MASK" and detection_result.multi_face_landmarks:
-            return self.apply_mask(frame, detection_result)
         elif self.filter_enabled == "SNOW":
             return self.apply_snow_effect(frame)
         elif self.filter_enabled == "SEPIA":
@@ -30,6 +34,14 @@ class ApplyFiltr:
             return self.apply_invert(frame)
         
         return frame
+
+    def change_mask_index(self):
+        if self.mask_index >= len(self.masks) - 1:
+            self.mask_index = 0
+        else:
+            self.mask_index += 1
+        
+        self.mask = self.masks[self.mask_index]
 
     def apply_mask(self, frame, detection_result):
         frame_with_mask = np.copy(frame)
