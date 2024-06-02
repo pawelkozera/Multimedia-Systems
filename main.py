@@ -1,50 +1,80 @@
 import cv2
 from mediapipe import solutions
 from apply_fiiltr import ApplyFiltr
+from tkinter import *
+from PIL import Image, ImageTk
 
-
-def main():
-    apply_mask_instance = ApplyFiltr()
-    face_mesh = solutions.face_mesh.FaceMesh()
-    cap = cv2.VideoCapture(0)
-
-    while cap.isOpened():
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-        elif cv2.waitKey(1) & 0xFF == ord('a'):
-            apply_mask_instance.mask_enabled = "APPLY_MASK"
-            apply_mask_instance.change_mask_index()
-        elif cv2.waitKey(1) & 0xFF == ord('s'):
-            apply_mask_instance.mask_enabled = ""
-        elif cv2.waitKey(1) & 0xFF == ord('w'):
-            apply_mask_instance.filter_enabled = "BLACK_BARS"
-        elif cv2.waitKey(1) & 0xFF == ord('e'):
-            apply_mask_instance.filter_enabled = "SNOW"
-        elif cv2.waitKey(1) & 0xFF == ord('r'):
-            apply_mask_instance.filter_enabled = "SEPIA"
-        elif cv2.waitKey(1) & 0xFF == ord('t'):
-            apply_mask_instance.filter_enabled = "CARTOON"
-        elif cv2.waitKey(1) & 0xFF == ord('y'):
-            apply_mask_instance.filter_enabled = "BLUR"
-        elif cv2.waitKey(1) & 0xFF == ord('u'):
-            apply_mask_instance.filter_enabled = "EDGE_DETECTION"
-        elif cv2.waitKey(1) & 0xFF == ord('i'):
-            apply_mask_instance.filter_enabled = "INVERT"
-        elif cv2.waitKey(1) & 0xFF == ord('z'):
-            apply_mask_instance.filter_enabled = ""
-
-        ret, frame = cap.read()
-        if not ret:
-            break
+class FaceFilterApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Face Filter App")
+        self.root.geometry("800x500")
         
-        results = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        self.canvas = Canvas(self.root, width=700, height=600)
+        self.canvas.pack(side=LEFT)
+        
+        self.button_frame = Frame(self.root)
+        self.button_frame.pack(side=LEFT, fill=BOTH, expand=True)
 
-        frame = apply_mask_instance.process_frame(frame, results)
+        self.create_buttons()
 
-        cv2.imshow('Face with Mask', frame)
+        self.apply_mask_instance = ApplyFiltr()
+        self.face_mesh = solutions.face_mesh.FaceMesh()
+        self.cap = cv2.VideoCapture(0)
 
-    cap.release()
-    cv2.destroyAllWindows()
+        self.update_frame()
+
+    def create_buttons(self):
+        button_texts = [
+            ('Apply Mask', self.apply_mask),
+            ('Clear Mask', self.clear_mask),
+            ('Black Bars', lambda: self.apply_filter("BLACK_BARS")),
+            ('Snow', lambda: self.apply_filter("SNOW")),
+            ('Sepia', lambda: self.apply_filter("SEPIA")),
+            ('Cartoon', lambda: self.apply_filter("CARTOON")),
+            ('Blur', lambda: self.apply_filter("BLUR")),
+            ('Edge Detection', lambda: self.apply_filter("EDGE_DETECTION")),
+            ('Invert', lambda: self.apply_filter("INVERT")),
+            ('Clear Filter', self.clear_filter),
+            ('Quit', self.quit_app)
+        ]
+
+        for text, command in button_texts:
+            button = Button(self.button_frame, text=text, command=command)
+            button.pack(pady=5)
+
+    def apply_mask(self):
+        self.apply_mask_instance.mask_enabled = "APPLY_MASK"
+        self.apply_mask_instance.change_mask_index()
+
+    def clear_mask(self):
+        self.apply_mask_instance.mask_enabled = ""
+
+    def apply_filter(self, filter_name):
+        self.apply_mask_instance.filter_enabled = filter_name
+
+    def clear_filter(self):
+        self.apply_mask_instance.filter_enabled = ""
+
+    def quit_app(self):
+        self.cap.release()
+        self.root.quit()
+
+    def update_frame(self):
+        ret, frame = self.cap.read()
+        if ret:
+            results = self.face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            frame = self.apply_mask_instance.process_frame(frame, results)
+            
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(frame)
+            imgtk = ImageTk.PhotoImage(image=img)
+            self.canvas.create_image(0, 0, anchor=NW, image=imgtk)
+            self.canvas.imgtk = imgtk
+        
+        self.root.after(10, self.update_frame)
 
 if __name__ == "__main__":
-    main()
+    root = Tk()
+    app = FaceFilterApp(root)
+    root.mainloop()
